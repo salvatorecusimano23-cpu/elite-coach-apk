@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="it" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#09090b" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Elite Coach" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <title>Elite Coaching — App Cliente</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --sat: env(safe-area-inset-top, 0px);
+      --sab: env(safe-area-inset-bottom, 0px);
+    }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #09090b;
+      color: #fafafa;
+      -webkit-tap-highlight-color: transparent;
+      overscroll-behavior-y: none;
+      user-select: none;
+    }
+    input, textarea { user-select: text; }
+    .safe-top { padding-top: calc(0.85rem + var(--sat)); }
+    .safe-bottom { padding-bottom: calc(0.55rem + var(--sab)); }
+    .glass {
+      background: rgba(18, 18, 21, 0.85);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+    .gold-gradient { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+    .emerald-gradient { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    @keyframes pulseBar {
+      0%, 100% { transform: scaleY(0.4); }
+      50% { transform: scaleY(1); }
+    }
+    .wave-bar { animation: pulseBar 0.8s ease-in-out infinite; }
+    .wave-bar.paused { animation-play-state: paused; transform: scaleY(0.45); }
+  </style>
+</head>
+<body class="min-h-screen flex justify-center bg-black">
+
+  <div id="app" class="w-full max-w-md min-h-screen bg-[#09090b] relative flex flex-col border-x border-zinc-900 shadow-2xl">
+    
+    <!-- Header App -->
+    <header class="sticky top-0 z-30 glass safe-top px-4 pb-3 flex items-center justify-between border-b border-zinc-800/80">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl gold-gradient flex items-center justify-center font-black text-zinc-950 text-sm shadow-lg shadow-amber-500/20" id="brand-initials">
+          EC
+        </div>
+        <div>
+          <div class="text-[10px] uppercase tracking-widest text-amber-400 font-extrabold" id="header-brand">ELITE PERFORMANCE</div>
+          <div class="text-xs text-zinc-400 font-medium" id="header-coach">Coach Marco</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <button id="install-btn" onclick="triggerInstall()" class="hidden px-2.5 py-1.5 rounded-lg gold-gradient text-zinc-950 text-[11px] font-extrabold shadow active:scale-95 transition">
+          + Installa App
+        </button>
+        <button onclick="toggleCoachModal()" class="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 text-[11px] font-semibold text-zinc-300 flex items-center gap-1 active:scale-95 transition">
+          <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+          Setup
+        </button>
+      </div>
+    </header>
+
+    <!-- Banner Installazione Guidata (visibile solo se aperta nel browser e non ancora installata) -->
+    <div id="pwa-banner" class="hidden mx-4 mt-3 p-3 rounded-2xl bg-zinc-900 border border-amber-500/35 flex items-center justify-between gap-2.5">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-xl gold-gradient text-zinc-950 flex items-center justify-center font-black text-xs shrink-0">⚡</div>
+        <div class="text-[11px] leading-snug text-zinc-300">
+          <strong class="text-white block">Aggiungi alla schermata Home</strong>
+          <span id="pwa-hint-text">Tocca Condividi e poi "Aggiungi alla schermata Home" per usarla come app.</span>
+        </div>
+      </div>
+      <button onclick="dismissBanner()" class="text-zinc-500 hover:text-white text-xs font-bold px-1.5">✕</button>
+    </div>
+
+    <!-- Timer Recupero Flottante -->
+    <div id="rest-timer-bar" class="hidden sticky top-[62px] z-20 mx-3 mt-2 px-4 py-2.5 rounded-2xl bg-amber-500 text-zinc-950 shadow-xl shadow-amber-500/20 flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <span class="w-2.5 h-2.5 rounded-full bg-zinc-950 animate-ping"></span>
+        <div>
+          <div class="text-[10px] font-extrabold uppercase tracking-wider opacity-80">Recupero</div>
+          <div class="text-lg font-black leading-none" id="rest-timer-display">01:30</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <button onclick="adjustTimer(15)" class="px-2 py-1 rounded-lg bg-zinc-950/15 font-bold text-xs">+15s</button>
+        <button onclick="stopTimer()" class="px-2.5 py-1 rounded-lg bg-zinc-950 text-amber-400 font-bold text-xs">Salta</button>
+      </div>
+    </div>
+
+    <!-- Contenuto Principale -->
+    <main id="main-content" class="flex-1 px-4 pt-4 pb-28 space-y-5 overflow-y-auto no-scrollbar"></main>
+
+    <!-- Tab Bar Nativa in Basso -->
+    <nav class="fixed bottom-0 w-full max-w-md z-30 glass border-t border-zinc-800/90 px-2 pt-2 safe-bottom flex justify-around items-center">
+      <button onclick="switchTab('oggi')" id="nav-oggi" class="nav-btn flex flex-col items-center gap-1 py-1 px-3 rounded-xl text-amber-400 transition">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        <span class="text-[10px] font-bold">Oggi</span>
+      </button>
+      <button onclick="switchTab('allenamento')" id="nav-allenamento" class="nav-btn flex flex-col items-center gap-1 py-1 px-3 rounded-xl text-zinc-500 transition">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/></svg>
+        <span class="text-[10px] font-bold">Scheda</span>
+      </button>
+      <button onclick="switchTab('progressi')" id="nav-progressi" class="nav-btn flex flex-col items-center gap-1 py-1 px-3 rounded-xl text-zinc-500 transition">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941"/></svg>
+        <span class="text-[10px] font-bold">Progressi</span>
+      </button>
+      <button onclick="switchTab('checkin')" id="nav-checkin" class="nav-btn flex flex-col items-center gap-1 py-1 px-3 rounded-xl text-zinc-500 transition">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span class="text-[10px] font-bold">Check-in</span>
+      </button>
+    </nav>
+
+    <!-- Modale Setup Coach -->
+    <div id="coach-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
+      <div class="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-3xl p-5 space-y-4 shadow-2xl max-h-[88vh] overflow-y-auto">
+        <div class="flex items-center justify-between border-b border-zinc-800 pb-3">
+          <div>
+            <h3 class="text-base font-extrabold text-white">Setup Personal Trainer</h3>
+            <p class="text-xs text-zinc-400">Personalizza brand, cliente e obiettivi</p>
+          </div>
+          <button onclick="toggleCoachModal()" class="w-8 h-8 rounded-full bg-zinc-800 text-zinc-400 flex items-center justify-center font-bold">✕</button>
+        </div>
+
+        <div class="space-y-3 text-xs">
+          <div>
+            <label class="block text-zinc-400 font-semibold mb-1">Nome Brand / Studio</label>
+            <input id="cfg-brand" type="text" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-white font-medium focus:border-amber-500 outline-none" />
+          </div>
+          <div>
+            <label class="block text-zinc-400 font-semibold mb-1">Il tuo Nome (Coach)</label>
+            <input id="cfg-coach" type="text" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-white font-medium focus:border-amber-500 outline-none" />
+          </div>
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="block text-zinc-400 font-semibold mb-1">Nome Cliente</label>
+              <input id="cfg-client" type="text" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-white font-medium focus:border-amber-500 outline-none" />
+            </div>
+            <div>
+              <label class="block text-zinc-400 font-semibold mb-1">Obiettivo</label>
+              <input id="cfg-goal" type="text" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-white font-medium focus:border-amber-500 outline-none" />
+            </div>
+          </div>
+          <div class="grid grid-cols-3 gap-2">
+            <div>
+              <label class="block text-zinc-400 font-semibold mb-1">Peso Start</label>
+              <input id="cfg-start-w" type="number" step="0.1" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-white font-medium focus:border-amber-500 outline-none" />
+            </div>
+            <div>
+              <label class="block text-zinc-400 font-semibold mb-1">Attuale</label>
+              <input id="cfg-curr-w" type="number" step="0.1" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-white font-medium focus:border-amber-500 outline-none" />
+            </div>
+            <div>
+              <label class="block text-zinc-400 font-semibold mb-1">Target</label>
+              <input id="cfg-target-w" type="number" step="0.1" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-white font-medium focus:border-amber-500 outline-none" />
+            </div>
+          </div>
+          <div>
+            <label class="block text-zinc-400 font-semibold mb-1">Nota Tecnica del Coach</label>
+            <textarea id="cfg-note" rows="2" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-white font-medium focus:border-amber-500 outline-none"></textarea>
+          </div>
+        </div>
+
+        <button onclick="saveCoachConfig()" class="w-full py-3 rounded-xl gold-gradient text-zinc-950 font-extrabold text-sm shadow-lg shadow-amber-500/20 active:scale-98 transition">
+          Salva Configurazione
+        </button>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="hidden fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-full bg-emerald-500 text-zinc-950 font-bold text-xs shadow-xl whitespace-nowrap">
+      Completato!
+    </div>
+  </div>
+
+  <script>
+    // Registrazione Service Worker PWA
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      });
+    }
+
+    // Gestione Installazione App (Android Chrome + iOS Safari)
+    let deferredPrompt = null;
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      if (!isStandalone) {
+        document.getElementById('install-btn').classList.remove('hidden');
+      }
+    });
+
+    function triggerInstall() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(() => {
+          deferredPrompt = null;
+          document.getElementById('install-btn').classList.add('hidden');
+        });
+      }
+    }
+
+    function dismissBanner() {
+      document.getElementById('pwa-banner').classList.add('hidden');
+      sessionStorage.setItem('hide_pwa_banner', '1');
+    }
+
+    if (!isStandalone && !sessionStorage.getItem('hide_pwa_banner')) {
+      const isIOS = /iphone|ipad|ipod/i.test(window.navigator.userAgent);
+      const banner = document.getElementById('pwa-banner');
+      const hint = document.getElementById('pwa-hint-text');
+      if (isIOS) {
+        hint.textContent = 'Tocca l’icona Condividi in basso e poi "Aggiungi alla schermata Home".';
+      } else {
+        hint.textContent = 'Tocca i 3 puntini del browser e poi "Installa app" o "Aggiungi a schermata Home".';
+      }
+      banner.classList.remove('hidden');
+    }
+
+    // Stato Applicazione
+    const defaultState = {
+      brand: "ELITE PERFORMANCE",
+      coach: "Coach Marco",
+      client: "Andrea",
+      goal: "Ricomposizione Corporea",
+      startWeight: 84.5,
+      currentWeight: 79.8,
+      targetWeight: 77.0,
+      startBf: 19.4,
+      currentBf: 14.8,
+      adherence: 94,
+      week: 8,
+      totalWeeks: 12,
+      coachNote: "Ottima settimana Andrea! Il girovita scende costante e i carichi su panca e squat continuano a salire. Mantieni 2.5L d'acqua al giorno.",
+      activeTab: "oggi",
+      activeSplit: "A",
+      chartMetric: "weight",
+      photoAngle: "front",
+      audioPlaying: false,
+      weightHistory: [84.5, 83.8, 83.1, 82.4, 81.6, 81.0, 80.3, 79.8],
+      bfHistory: [19.4, 18.8, 18.2, 17.5, 16.9, 16.2, 15.4, 14.8],
+      strengthHistory: [185, 192, 200, 207, 215, 222, 230, 240],
+      measurements: [
+        { name: "Girovita (ombelico)", start: 91.0, current: 84.5, unit: "cm", lowerIsBetter: true },
+        { name: "Torace / Petto", start: 102.0, current: 104.5, unit: "cm", lowerIsBetter: false },
+        { name: "Braccio (contratto)", start: 36.5, current: 38.2, unit: "cm", lowerIsBetter: false },
+        { name: "Coscia (mediana)", start: 58.0, current: 59.5, unit: "cm", lowerIsBetter: false }
+      ],
+      workouts: {
+        A: {
+          title: "Split A — Upper Push & Focus Petto",
+          duration: "55 min",
+          exercises: [
+            {
+              id: "a1", name: "Panca Piana Bilanciere", rest: 120,
+              note: "Fermo al petto 1 sec, scapole addotte e depresse.",
+              sets: [
+                { reps: "6", kg: "82.5", done: true },
+                { reps: "6", kg: "82.5", done: true },
+                { reps: "6", kg: "85", done: false },
+                { reps: "8", kg: "77.5", done: false }
+              ]
+            },
+            {
+              id: "a2", name: "Spinte Manubri Inclinata 30°", rest: 90,
+              note: "Controlla la fase eccentrica (3 secondi in discesa).",
+              sets: [
+                { reps: "10", kg: "28", done: false },
+                { reps: "10", kg: "28", done: false },
+                { reps: "10", kg: "26", done: false }
+              ]
+            },
+            {
+              id: "a3", name: "Alzate Laterali ai Cavi", rest: 60,
+              note: "Gomito leggermente flesso, non slanciare con la schiena.",
+              sets: [
+                { reps: "15", kg: "10", done: false },
+                { reps: "15", kg: "10", done: false },
+                { reps: "15", kg: "10", done: false }
+              ]
+            },
+            {
+              id: "a4", name: "French Press Manubri", rest: 75,
+              note: "Gomiti stretti e fermi per tutto l'arco di movimento.",
+              sets: [
+                { reps: "12", kg: "14", done: false },
+                { reps: "12", kg: "14", done: false },
+                { reps: "12", kg: "14", done: false }
+              ]
+            }
+          ]
+        },
+        B: {
+          title: "Split B — Lower Body & Core",
+          duration: "60 min",
+          exercises: [
+            {
+              id: "b1", name: "Back Squat Bilanciere", rest: 150,
+              note: "Scendi sotto il parallelo mantenendo il core compatto.",
+              sets: [
+                { reps: "6", kg: "105", done: false },
+                { reps: "6", kg: "105", done: false },
+                { reps: "6", kg: "110", done: false },
+                { reps: "8", kg: "95", done: false }
+              ]
+            },
+            {
+              id: "b2", name: "Romanian Deadlift (RDL)", rest: 120,
+              note: "Spingi il bacino indietro finché senti tirare i femorali.",
+              sets: [
+                { reps: "8", kg: "95", done: false },
+                { reps: "8", kg: "95", done: false },
+                { reps: "10", kg: "90", done: false }
+              ]
+            },
+            {
+              id: "b3", name: "Leg Extension (Picco 1s)", rest: 60,
+              note: "Contrazione di 1 secondo in alto su ogni ripetizione.",
+              sets: [
+                { reps: "12", kg: "55", done: false },
+                { reps: "12", kg: "55", done: false },
+                { reps: "15", kg: "50", done: false }
+              ]
+            }
+          ]
+        },
+        C: {
+          title: "Split C — Upper Pull & Dorso",
+          duration: "55 min",
+          exercises: [
+            {
+              id: "c1", name: "Trazioni Presa Prona (Zavorrate)", rest: 120,
+              note: "Porta lo sterno verso la sbarra, distensione completa in basso.",
+              sets: [
+                { reps: "6", kg: "+10", done: false },
+                { reps: "6", kg: "+10", done: false },
+                { reps: "8", kg: "+5", done: false }
+              ]
+            },
+            {
+              id: "c2", name: "Rematore Manubrio su Panca", rest: 90,
+              note: "Tira il gomito verso l'anca senza ruotare il busto.",
+              sets: [
+                { reps: "10", kg: "32", done: false },
+                { reps: "10", kg: "32", done: false },
+                { reps: "10", kg: "32", done: false }
+              ]
+            },
+            {
+              id: "c3", name: "Curl Bilanciere EZ", rest: 75,
+              note: "Zero cheating, gomiti bloccati lungo i fianchi.",
+              sets: [
+                { reps: "10", kg: "32.5", done: false },
+                { reps: "10", kg: "32.5", done: false },
+                { reps: "12", kg: "30", done: false }
+              ]
+            }
+          ]
+        }
+      },
+      checkinForm: { weight: "79.8", sleep: 4, energy: 5, diet: 95, notes: "" }
+    };
+
+    let state = JSON.parse(localStorage.getItem('elite_pwa_v1')) || defaultState;
+    function saveState() { localStorage.setItem('elite_pwa_v1', JSON.stringify(state)); }
+
+    let timerInterval = null;
+    let remainingSeconds = 0;
+
+    function startTimer(seconds) {
+      clearInterval(timerInterval);
+      remainingSeconds = seconds;
+      document.getElementById('rest-timer-bar').classList.remove('hidden');
+      updateTimerDisplay();
+      timerInterval = setInterval(() => {
+        remainingSeconds--;
+        if (remainingSeconds <= 0) {
+          stopTimer();
+          showToast("Recupero terminato! Prossima serie");
+        } else {
+          updateTimerDisplay();
+        }
+      }, 1000);
+    }
+
+    function adjustTimer(sec) { remainingSeconds += sec; updateTimerDisplay(); }
+    function stopTimer() { clearInterval(timerInterval); document.getElementById('rest-timer-bar').classList.add('hidden'); }
+    function updateTimerDisplay() {
+      const m = String(Math.floor(remainingSeconds / 60)).padStart(2, '0');
+      const s = String(remainingSeconds % 60).padStart(2, '0');
+      document.getElementById('rest-timer-display').textContent = `${m}:${s}`;
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.remove('hidden');
+      setTimeout(() => t.classList.add('hidden'), 2600);
+    }
+
+    function updateHeader() {
+      document.getElementById('header-brand').textContent = state.brand.toUpperCase();
+      document.getElementById('header-coach').textContent = state.coach;
+      const initials = state.brand.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'EC';
+      document.getElementById('brand-initials').textContent = initials;
+    }
+
+    function switchTab(tab) {
+      state.activeTab = tab;
+      saveState();
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('text-amber-400');
+        btn.classList.add('text-zinc-500');
+      });
+      const activeBtn = document.getElementById(`nav-${tab}`);
+      if (activeBtn) {
+        activeBtn.classList.remove('text-zinc-500');
+        activeBtn.classList.add('text-amber-400');
+      }
+      render();
+    }
+
+    function toggleCoachModal() {
+      const modal = document.getElementById('coach-modal');
+      if (modal.classList.contains('hidden')) {
+        document.getElementById('cfg-brand').value = state.brand;
+        document.getElementById('cfg-coach').value = state.coach;
+        document.getElementById('cfg-client').value = state.client;
+        document.getElementById('cfg-goal').value = state.goal;
+        document.getElementById('cfg-start-w').value = state.startWeight;
+        document.getElementById('cfg-curr-w').value = state.currentWeight;
+        document.getElementById('cfg-target-w').value = state.targetWeight;
+        document.getElementById('cfg-note').value = state.coachNote;
+        modal.classList.remove('hidden');
+      } else {
+        modal.classList.add('hidden');
+      }
+    }
+
+    function saveCoachConfig() {
+      state.brand = document.getElementById('cfg-brand').value || state.brand;
+      state.coach = document.getElementById('cfg-coach').value || state.coach;
+      state.client = document.getElementById('cfg-client').value || state.client;
+      state.goal = document.getElementById('cfg-goal').value || state.goal;
+      state.startWeight = parseFloat(document.getElementById('cfg-start-w').value) || state.startWeight;
+      state.currentWeight = parseFloat(document.getElementById('cfg-curr-w').value) || state.currentWeight;
+      state.targetWeight = parseFloat(document.getElementById('cfg-target-w').value) || state.targetWeight;
+      state.coachNote = document.getElementById('cfg-note').value || state.coachNote;
+      state.weightHistory[state.weightHistory.length - 1] = state.currentWeight;
+      saveState();
+      updateHeader();
+      toggleCoachModal();
+      render();
+      showToast("App aggiornata con successo!");
+    }
+
+    function selectSplit(split) { state.activeSplit = split; saveState(); render(); }
+
+    function toggleSetDone(exId, setIdx) {
+      const ex = state.workouts[state.activeSplit].exercises.find(e => e.id === exId);
+      if (!ex) return;
+      ex.sets[setIdx].done = !ex.sets[setIdx].done;
+      saveState();
+      if (ex.sets[setIdx].done) startTimer(ex.rest);
+      render();
+    }
+
+    function updateSetKg(exId, setIdx, val) {
+      const ex = state.workouts[state.activeSplit].exercises.find(e => e.id === exId);
+      if (ex) { ex.sets[setIdx].kg = val; saveState(); }
+    }
+
+    function toggleAudio() {
+      state.audioPlaying = !state.audioPlaying;
+      render();
+      if (state.audioPlaying) {
+        setTimeout(() => { state.audioPlaying = false; render(); }, 6000);
+      }
+    }
+
+    function buildChartSVG() {
+      let data = state.weightHistory, color = "#f59e0b", unit = "kg";
+      if (state.chartMetric === "bf") { data = state.bfHistory; color = "#10b981"; unit = "%"; }
+      else if (state.chartMetric === "strength") { data = state.strengthHistory; color = "#38bdf8"; unit = "kg"; }
+
+      const w = 320, h = 135, padX = 22, padY = 22;
+      const min = Math.min(...data) * 0.985, max = Math.max(...data) * 1.015;
+      const range = max - min || 1;
+
+      const points = data.map((val, idx) => ({
+        x: padX + (idx / (data.length - 1)) * (w - padX * 2),
+        y: h - padY - ((val - min) / range) * (h - padY * 2),
+        val
+      }));
+
+      const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+      const areaPath = `${linePath} L ${points[points.length - 1].x.toFixed(1)} ${h - 8} L ${points[0].x.toFixed(1)} ${h - 8} Z`;
+
+      const circles = points.map((p, idx) => `
+        <g>
+          <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="4" fill="#09090b" stroke="${color}" stroke-width="2.5" />
+          ${idx === 0 || idx === points.length - 1 || idx === Math.floor(points.length / 2) ? `
+            <text x="${p.x.toFixed(1)}" y="${(p.y - 9).toFixed(1)}" text-anchor="middle" fill="#e4e4e7" font-size="9.5" font-weight="700">${p.val}${unit}</text>
+          ` : ''}
+          <text x="${p.x.toFixed(1)}" y="${h}" text-anchor="middle" fill="#71717a" font-size="8.5">S${idx + 1}</text>
+        </g>
+      `).join('');
+
+      return `
+        <svg viewBox="0 0 ${w} ${h + 4}" class="w-full h-36 overflow-visible">
+          <defs>
+            <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="${color}" stop-opacity="0.32" />
+              <stop offset="100%" stop-color="${color}" stop-opacity="0.0" />
+            </linearGradient>
+          </defs>
+          <path d="${areaPath}" fill="url(#chartGrad)" />
+          <path d="${linePath}" fill="none" stroke="${color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+          ${circles}
+        </svg>
+      `;
+    }
+
+    function submitCheckin(sendWhatsapp) {
+      const wVal = parseFloat(document.getElementById('ci-weight').value);
+      const dietVal = parseInt(document.getElementById('ci-diet').value) || 90;
+      const notesVal = document.getElementById('ci-notes').value;
+
+      if (!isNaN(wVal) && wVal > 30) {
+        state.currentWeight = wVal;
+        state.weightHistory.push(wVal);
+        if (state.weightHistory.length > 10) state.weightHistory.shift();
+      }
+      state.adherence = dietVal;
+      state.checkinForm.weight = isNaN(wVal) ? state.currentWeight : wVal;
+      state.checkinForm.diet = dietVal;
+      state.checkinForm.notes = notesVal;
+      saveState();
+
+      if (sendWhatsapp) {
+        const diff = (state.currentWeight - state.startWeight).toFixed(1);
+        const msg = `📋 *CHECK-IN SETTIMANALE - ${state.client.toUpperCase()}*
+` +
+          `👨‍🏫 Coach: ${state.coach}
+` +
+          `⚖️ Peso attuale: *${state.currentWeight} kg* (${diff > 0 ? '+' : ''}${diff} kg dall'inizio)
+` +
+          `😴 Sonno: ${state.checkinForm.sleep}/5 | ⚡ Energia: ${state.checkinForm.energy}/5
+` +
+          `🥗 Aderenza Dieta: ${dietVal}%
+` +
+          (notesVal ? `📝 Note: _${notesVal}_` : '');
+        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+      } else {
+        showToast("Check-in salvato nei grafici!");
+        switchTab('progressi');
+      }
+    }
+
+    function render() {
+      const main = document.getElementById('main-content');
+
+      if (state.activeTab === 'oggi') {
+        const totalToLose = Math.abs(state.startWeight - state.targetWeight) || 1;
+        const lostSoFar = Math.abs(state.startWeight - state.currentWeight);
+        const pct = Math.min(100, Math.max(8, Math.round((lostSoFar / totalToLose) * 100)));
+        const deltaW = (state.currentWeight - state.startWeight).toFixed(1);
+
+        main.innerHTML = `
+          <div class="space-y-1">
+            <div class="flex items-center justify-between">
+              <span class="px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[10px] font-bold uppercase tracking-wider">
+                Settimana ${state.week} di ${state.totalWeeks}
+              </span>
+              <span class="text-[11px] text-zinc-400 font-medium">Prossimo check: <strong class="text-white">Domenica</strong></span>
+            </div>
+            <h1 class="text-2xl font-extrabold tracking-tight text-white pt-1">Ciao, ${state.client} 👋</h1>
+            <p class="text-xs text-zinc-400">Obiettivo: <span class="text-zinc-200 font-semibold">${state.goal}</span></p>
+          </div>
+
+          <div class="p-4 rounded-3xl bg-gradient-to-br from-zinc-900 via-zinc-900 to-zinc-950 border border-zinc-800/90 shadow-xl space-y-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-[11px] text-zinc-400 font-medium">Avanzamento Obiettivo</div>
+                <div class="text-xl font-black text-white mt-0.5">${pct}% <span class="text-xs font-normal text-zinc-400">completato</span></div>
+              </div>
+              <div class="text-right">
+                <div class="text-[11px] text-zinc-400">Target Finale</div>
+                <div class="text-base font-extrabold text-amber-400">${state.targetWeight} kg</div>
+              </div>
+            </div>
+            <div class="w-full h-2.5 bg-zinc-950 rounded-full overflow-hidden p-0.5 border border-zinc-800">
+              <div class="h-full rounded-full gold-gradient transition-all duration-500" style="width: ${pct}%"></div>
+            </div>
+            <div class="flex justify-between text-[10px] text-zinc-500 font-semibold">
+              <span>Start: ${state.startWeight} kg</span>
+              <span class="text-zinc-300">Attuale: ${state.currentWeight} kg</span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2.5">
+            <div class="p-3 rounded-2xl bg-zinc-900/90 border border-zinc-800/80">
+              <div class="text-[10px] text-zinc-400 font-semibold">Peso Attuale</div>
+              <div class="text-base font-extrabold text-white mt-1">${state.currentWeight} <span class="text-[10px] font-normal text-zinc-400">kg</span></div>
+              <div class="text-[10px] font-bold text-emerald-400 mt-0.5">${deltaW > 0 ? '+' : ''}${deltaW} kg</div>
+            </div>
+            <div class="p-3 rounded-2xl bg-zinc-900/90 border border-zinc-800/80">
+              <div class="text-[10px] text-zinc-400 font-semibold">Massa Grassa</div>
+              <div class="text-base font-extrabold text-white mt-1">${state.currentBf}%</div>
+              <div class="text-[10px] font-bold text-emerald-400 mt-0.5">${(state.currentBf - state.startBf).toFixed(1)}%</div>
+            </div>
+            <div class="p-3 rounded-2xl bg-zinc-900/90 border border-zinc-800/80">
+              <div class="text-[10px] text-zinc-400 font-semibold">Aderenza</div>
+              <div class="text-base font-extrabold text-white mt-1">${state.adherence}%</div>
+              <div class="text-[10px] font-bold text-amber-400 mt-0.5">Ottima</div>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-3xl bg-zinc-900/80 border border-amber-500/25 space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                <span class="text-xs font-extrabold text-white">Feedback di ${state.coach}</span>
+              </div>
+              <span class="text-[10px] text-zinc-500">Aggiornato oggi</span>
+            </div>
+
+            <div class="flex items-center gap-3 p-2.5 rounded-2xl bg-zinc-950 border border-zinc-800">
+              <button onclick="toggleAudio()" class="w-9 h-9 rounded-full gold-gradient text-zinc-950 flex items-center justify-center shrink-0 shadow-md active:scale-95 transition">
+                ${state.audioPlaying
+                  ? '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>'
+                  : '<svg class="w-4 h-4 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>'
+                }
+              </button>
+              <div class="flex-1 flex items-center gap-1 h-6">
+                ${[40,75,55,95,65,85,45,90,60,80,50,70,95,60,40,75,85,55].map((h, i) => `
+                  <div class="flex-1 bg-amber-400/80 rounded-full wave-bar ${state.audioPlaying ? '' : 'paused'}" style="height:${h}%; animation-delay:${i * 0.06}s"></div>
+                `).join('')}
+              </div>
+              <span class="text-[10px] font-bold text-zinc-400">0:42</span>
+            </div>
+
+            <p class="text-xs text-zinc-300 leading-relaxed bg-zinc-950/60 p-3 rounded-xl border border-zinc-800/60">
+              "${state.coachNote}"
+            </p>
+          </div>
+
+          <div onclick="switchTab('allenamento')" class="p-4 rounded-3xl gold-gradient text-zinc-950 flex items-center justify-between cursor-pointer shadow-lg shadow-amber-500/15 active:scale-[0.99] transition">
+            <div>
+              <div class="text-[10px] font-extrabold uppercase tracking-wider opacity-80">Prossima Sessione</div>
+              <div class="text-base font-black mt-0.5">${state.workouts[state.activeSplit].title}</div>
+              <div class="text-xs font-semibold opacity-85 mt-0.5">${state.workouts[state.activeSplit].exercises.length} esercizi • ~${state.workouts[state.activeSplit].duration}</div>
+            </div>
+            <div class="w-10 h-10 rounded-2xl bg-zinc-950 text-amber-400 flex items-center justify-center shrink-0">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
+            </div>
+          </div>
+        `;
+      }
+
+      else if (state.activeTab === 'allenamento') {
+        const currentWorkout = state.workouts[state.activeSplit];
+        const totalSets = currentWorkout.exercises.reduce((acc, e) => acc + e.sets.length, 0);
+        const doneSets = currentWorkout.exercises.reduce((acc, e) => acc + e.sets.filter(s => s.done).length, 0);
+
+        main.innerHTML = `
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <h2 class="text-xl font-extrabold text-white">Scheda Allenamento</h2>
+              <span class="text-xs font-bold text-amber-400">${doneSets}/${totalSets} serie</span>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2 p-1 rounded-2xl bg-zinc-900 border border-zinc-800">
+              ${['A', 'B', 'C'].map(sp => `
+                <button onclick="selectSplit('${sp}')" class="py-2 rounded-xl text-xs font-extrabold transition ${state.activeSplit === sp ? 'gold-gradient text-zinc-950 shadow' : 'text-zinc-400 hover:text-white'}">
+                  Split ${sp}
+                </button>
+              `).join('')}
+            </div>
+
+            <div class="p-3 rounded-2xl bg-zinc-900/70 border border-zinc-800/80 flex items-center justify-between">
+              <div>
+                <div class="text-xs font-bold text-white">${currentWorkout.title}</div>
+                <div class="text-[11px] text-zinc-400">Tocca ✓ per completare e avviare il recupero</div>
+              </div>
+              <span class="px-2.5 py-1 rounded-lg bg-zinc-800 text-[10px] font-bold text-zinc-300">${currentWorkout.duration}</span>
+            </div>
+          </div>
+
+          <div class="space-y-3.5">
+            ${currentWorkout.exercises.map((ex, idx) => `
+              <div class="p-4 rounded-3xl bg-zinc-900/90 border border-zinc-800 space-y-3">
+                <div>
+                  <div class="text-[10px] font-bold text-amber-400 uppercase tracking-wider">Esercizio ${idx + 1} • Rec ${ex.rest}s</div>
+                  <h3 class="text-sm font-extrabold text-white mt-0.5">${ex.name}</h3>
+                </div>
+                <p class="text-[11px] text-zinc-400 bg-zinc-950/70 px-3 py-2 rounded-xl border border-zinc-800/70">
+                  💡 ${ex.note}
+                </p>
+
+                <div class="space-y-1.5">
+                  <div class="grid grid-cols-12 text-[10px] font-bold text-zinc-500 px-2">
+                    <div class="col-span-2">SET</div>
+                    <div class="col-span-4 text-center">TARGET</div>
+                    <div class="col-span-4 text-center">CARICO (KG)</div>
+                    <div class="col-span-2 text-right">OK</div>
+                  </div>
+                  ${ex.sets.map((s, sIdx) => `
+                    <div class="grid grid-cols-12 items-center px-2 py-1.5 rounded-xl ${s.done ? 'bg-emerald-500/10 border border-emerald-500/30' : 'bg-zinc-950 border border-zinc-800/80'}">
+                      <div class="col-span-2 text-xs font-extrabold ${s.done ? 'text-emerald-400' : 'text-zinc-400'}">#${sIdx + 1}</div>
+                      <div class="col-span-4 text-center text-xs font-bold text-zinc-200">${s.reps} reps</div>
+                      <div class="col-span-4 flex justify-center">
+                        <input type="text" value="${s.kg}" onchange="updateSetKg('${ex.id}', ${sIdx}, this.value)"
+                          class="w-16 text-center bg-zinc-900 border border-zinc-700 rounded-lg py-1 text-xs font-extrabold text-white focus:border-amber-400 outline-none" />
+                      </div>
+                      <div class="col-span-2 flex justify-end">
+                        <button onclick="toggleSetDone('${ex.id}', ${sIdx})"
+                          class="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs transition active:scale-90 ${s.done ? 'emerald-gradient text-zinc-950 shadow' : 'bg-zinc-800 text-zinc-500'}">
+                          ✓
+                        </button>
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
+
+      else if (state.activeTab === 'progressi') {
+        main.innerHTML = `
+          <div class="space-y-1">
+            <h2 class="text-xl font-extrabold text-white">I Tuoi Progressi</h2>
+            <p class="text-xs text-zinc-400">Analisi andamento settimane 1–${state.week}</p>
+          </div>
+
+          <div class="p-4 rounded-3xl bg-zinc-900/90 border border-zinc-800 space-y-3">
+            <div class="flex gap-1.5 bg-zinc-950 p-1 rounded-xl border border-zinc-800">
+              <button onclick="state.chartMetric='weight'; render()" class="flex-1 py-1.5 rounded-lg text-[11px] font-bold transition ${state.chartMetric==='weight' ? 'bg-amber-500 text-zinc-950' : 'text-zinc-400'}">Peso (kg)</button>
+              <button onclick="state.chartMetric='bf'; render()" class="flex-1 py-1.5 rounded-lg text-[11px] font-bold transition ${state.chartMetric==='bf' ? 'bg-emerald-500 text-zinc-950' : 'text-zinc-400'}">Massa Grassa</button>
+              <button onclick="state.chartMetric='strength'; render()" class="flex-1 py-1.5 rounded-lg text-[11px] font-bold transition ${state.chartMetric==='strength' ? 'bg-sky-400 text-zinc-950' : 'text-zinc-400'}">Forza Tot.</button>
+            </div>
+            <div class="pt-2">${buildChartSVG()}</div>
+          </div>
+
+          <div class="p-4 rounded-3xl bg-zinc-900/90 border border-zinc-800 space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="text-sm font-extrabold text-white">Circonferenze Corporee</h3>
+              <span class="text-[10px] font-bold text-zinc-400">Giorno 1 vs Oggi</span>
+            </div>
+            <div class="space-y-2">
+              ${state.measurements.map(m => {
+                const diff = (m.current - m.start).toFixed(1);
+                const isGood = m.lowerIsBetter ? diff <= 0 : diff >= 0;
+                return `
+                  <div class="flex items-center justify-between p-2.5 rounded-2xl bg-zinc-950 border border-zinc-800/80">
+                    <div>
+                      <div class="text-xs font-bold text-zinc-200">${m.name}</div>
+                      <div class="text-[10px] text-zinc-500">Inizio: ${m.start} ${m.unit}</div>
+                    </div>
+                    <div class="text-right">
+                      <div class="text-sm font-extrabold text-white">${m.current} ${m.unit}</div>
+                      <div class="text-[10px] font-bold ${isGood ? 'text-emerald-400' : 'text-amber-400'}">
+                        ${diff > 0 ? '+' : ''}${diff} ${m.unit}
+                      </div>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+
+          <div class="p-4 rounded-3xl bg-zinc-900/90 border border-zinc-800 space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="text-sm font-extrabold text-white">Confronto Visivo</h3>
+              <div class="flex gap-1 bg-zinc-950 p-1 rounded-lg border border-zinc-800">
+                ${['front', 'side', 'back'].map(ang => `
+                  <button onclick="state.photoAngle='${ang}'; render()" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase ${state.photoAngle===ang ? 'bg-zinc-800 text-amber-400' : 'text-zinc-500'}">
+                    ${ang === 'front' ? 'Fronte' : ang === 'side' ? 'Lato' : 'Retro'}
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2.5">
+              <div class="aspect-[3/4] rounded-2xl bg-zinc-950 border border-zinc-800 flex flex-col items-center justify-center p-3 text-center relative">
+                <span class="absolute top-2 left-2 px-2 py-0.5 rounded bg-zinc-800 text-[9px] font-extrabold text-zinc-300">SETTIMANA 1</span>
+                <svg class="w-12 h-12 text-zinc-700 mb-2" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
+                <div class="text-xs font-bold text-zinc-400">${state.startWeight} kg</div>
+                <div class="text-[10px] text-zinc-600">BF ${state.startBf}%</div>
+              </div>
+              <div class="aspect-[3/4] rounded-2xl bg-gradient-to-b from-zinc-900 to-zinc-950 border border-amber-500/40 flex flex-col items-center justify-center p-3 text-center relative">
+                <span class="absolute top-2 left-2 px-2 py-0.5 rounded gold-gradient text-[9px] font-extrabold text-zinc-950">OGGI (S${state.week})</span>
+                <svg class="w-12 h-12 text-amber-400/80 mb-2" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
+                <div class="text-xs font-extrabold text-white">${state.currentWeight} kg</div>
+                <div class="text-[10px] text-emerald-400 font-bold">BF ${state.currentBf}%</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      else if (state.activeTab === 'checkin') {
+        main.innerHTML = `
+          <div class="space-y-1">
+            <h2 class="text-xl font-extrabold text-white">Check-in Settimanale</h2>
+            <p class="text-xs text-zinc-400">Aggiorna i tuoi parametri per ${state.coach}</p>
+          </div>
+
+          <div class="p-4 rounded-3xl bg-zinc-900/90 border border-zinc-800 space-y-4">
+            <div>
+              <label class="block text-xs font-bold text-zinc-300 mb-1.5">Peso a digiuno stamattina (kg)</label>
+              <input id="ci-weight" type="number" step="0.1" value="${state.currentWeight}"
+                class="w-full bg-zinc-950 border border-zinc-800 rounded-2xl px-4 py-3 text-lg font-extrabold text-white focus:border-amber-500 outline-none" />
+            </div>
+
+            <div>
+              <div class="flex justify-between text-xs font-bold mb-1.5">
+                <span class="text-zinc-300">Qualità del Sonno</span>
+                <span class="text-amber-400">${state.checkinForm.sleep}/5</span>
+              </div>
+              <div class="grid grid-cols-5 gap-2">
+                ${[1,2,3,4,5].map(n => `
+                  <button onclick="state.checkinForm.sleep=${n}; render()" class="py-2 rounded-xl font-extrabold text-xs border transition ${state.checkinForm.sleep >= n ? 'bg-amber-500/20 border-amber-500 text-amber-400' : 'bg-zinc-950 border-zinc-800 text-zinc-500'}">
+                    ★ ${n}
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between text-xs font-bold mb-1.5">
+                <span class="text-zinc-300">Energia in Allenamento</span>
+                <span class="text-emerald-400">${state.checkinForm.energy}/5</span>
+              </div>
+              <div class="grid grid-cols-5 gap-2">
+                ${[1,2,3,4,5].map(n => `
+                  <button onclick="state.checkinForm.energy=${n}; render()" class="py-2 rounded-xl font-extrabold text-xs border transition ${state.checkinForm.energy >= n ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400' : 'bg-zinc-950 border-zinc-800 text-zinc-500'}">
+                    ⚡ ${n}
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between text-xs font-bold mb-1.5">
+                <span class="text-zinc-300">Aderenza al Piano Alimentare (%)</span>
+                <span class="text-white" id="diet-val-label">${state.checkinForm.diet}%</span>
+              </div>
+              <input id="ci-diet" type="range" min="50" max="100" step="5" value="${state.checkinForm.diet}"
+                oninput="document.getElementById('diet-val-label').textContent = this.value + '%'"
+                class="w-full accent-amber-500" />
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-zinc-300 mb-1.5">Note, sensazioni o dolori</label>
+              <textarea id="ci-notes" rows="3" placeholder="Es. Ottimo pump nella Split A, fame sotto controllo..."
+                class="w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-3 text-xs text-white focus:border-amber-500 outline-none">${state.checkinForm.notes}</textarea>
+            </div>
+
+            <div class="space-y-2 pt-1">
+              <button onclick="submitCheckin(true)" class="w-full py-3.5 rounded-2xl emerald-gradient text-zinc-950 font-extrabold text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20 active:scale-98 transition">
+                Salva e Invia su WhatsApp al Coach
+              </button>
+              <button onclick="submitCheckin(false)" class="w-full py-3 rounded-2xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-bold text-xs transition">
+                Solo Salva nei Grafici
+              </button>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    updateHeader();
+    render();
+  </script>
+</body>
+</html>

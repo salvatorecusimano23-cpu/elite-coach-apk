@@ -1,0 +1,19 @@
+COME OTTENERE IL FILE .APK IN 2 MINUTI (SENZA INSTALLARE NULLA SUL PC)
+
+Metodo 1: Compilazione Automatica nel Cloud con GitHub (Consigliato - Gratis)
+1. Crea un account gratuito su github.com e crea un nuovo repository (es. "elite-coach-apk").
+2. Carica tutti i file contenuti in questa cartella (inclusa la cartella nascosta .github).
+3. Vai nella scheda "Actions" del repository su GitHub, clicca su "Build Android APK" -> "Run workflow".
+4. Dopo circa 2 minuti, clicca sul workflow completato e scarica "EliteCoach-Android-APK" in basso: dentro troverai il file app-debug.apk pronto da inviare ai clienti!
+
+Metodo 2: Da link web con PWABuilder (1 clic)
+1. Carica la cartella "www" su app.netlify.com/drop per ottenere un link HTTPS.
+2. Incolla il link su pwabuilder.com e clicca "Package for Stores" -> "Android" -> "Download Package" per scaricare direttamente l'APK firmato.
+
+Metodo 3: Compilazione locale sul tuo PC (se hai Node.js e Android Studio)
+Apri il terminale in questa cartella ed esegui:
+  npm install
+  npx cap add android
+  npx cap sync android
+  cd android && ./gradlew assembleDebug
+Troverai l'APK in: android/app/build/outputs/apk/debug/app-debug.apk

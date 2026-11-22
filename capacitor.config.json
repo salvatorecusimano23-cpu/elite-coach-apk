@@ -1,0 +1,11 @@
+{
+  "appId": "com.elitecoaching.cliente",
+  "appName": "Elite Coach",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "backgroundColor": "#09090b"
+  }
+}
